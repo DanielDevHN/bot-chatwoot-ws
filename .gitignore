@@ -1,0 +1,37 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.bak
+*.tmp
+
+# Sessions
+bot_sessions/
+*_sessions/
+
+google-key.json
+*.qr.png
