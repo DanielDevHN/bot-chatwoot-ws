@@ -1,37 +1,27 @@
-import {
-  createBot,
-  createFlow,
-  createProvider,
-  MemoryDB,
-  addKeyword,
-} from "@builderbot/bot";
-import { BaileysProvider as Provider } from "@builderbot/provider-baileys";
+import { createBot } from "@builderbot/bot";
 import { config } from "~/config";
+import { database } from "~/database";
+import { flow } from "~/flows";
+import { provider } from "~/providers/baileys.provider";
 import { ChatwootService } from "~/services/chatwoot.service";
-import { welcomeFlow } from "~/flows/welcome.flow";
-import { helpFlow } from "~/flows/help.flow";
 
 // Inicializar el servicio de Chatwoot
 const chatwootService = new ChatwootService();
 
 // Configuración principal del bot
 export const startServer = async () => {
-  const adapterDB = new MemoryDB();
-  const adapterFlow = createFlow([welcomeFlow, helpFlow]);
-  const adapterProvider = createProvider(Provider);
+  const adapterProvider = provider;
 
   // Crear el bot e inicializar el servidor HTTP
   const { handleCtx, httpServer } = await createBot({
-    flow: adapterFlow,
-    provider: adapterProvider,
-    database: adapterDB,
+    flow,
+    provider,
+    database,
   });
 
   // Interceptar mensajes entrantes al bot
   adapterProvider.on("message", async (payload) => {
     const { from, pushName, body } = payload;
-
-    console.log(`Mensaje recibido de ${from}: ${body}`);
 
     try {
       const phoneNumber = from.replace("@s.whatsapp.net", "");
@@ -60,7 +50,8 @@ export const startServer = async () => {
 
       await adapterProvider.sendMessage(
         from,
-        "¡Gracias por tu mensaje! Estamos procesando tu solicitud."
+        "¡Gracias por tu mensaje! Estamos procesando tu solicitud.",
+        {}
       );
     } catch (error: any) {
       console.error("Error al procesar el mensaje:", error.message);
@@ -68,40 +59,35 @@ export const startServer = async () => {
   });
 
   // Endpoint para manejar los webhooks de Chatwoot
-  adapterProvider.server.post("/chatwoot/webhook", async (req, res) => {
-    const {
-      event,
-      message_type,
-      content,
-      conversation,
-      private: isPrivate,
-    } = req.body;
+  adapterProvider.server.post(
+    "/chatwoot",
+    handleCtx(async (_, req, res) => {
+      const { event, message_type, content, conversation, private: isPrivate } = req.body;
+  
+      try {
+        if (event === "message_created" && message_type === "outgoing" && !isPrivate) {
+          const phoneNumber = conversation?.meta?.sender?.phone_number;
+  
+          if (!phoneNumber) {
+            res.end("Error: Número de teléfono no encontrado.");
+            return;
+          }
 
-    try {
-      if (
-        event === "message_created" &&
-        message_type === "outgoing" &&
-        !isPrivate
-      ) {
-        const phoneNumber = conversation.meta.sender.phone_number;
+          const formattedNumber = `${phoneNumber.replace("+", "")}@s.whatsapp.net`;
 
-        console.log(
-          `Enviando mensaje desde Chatwoot al usuario: ${phoneNumber}`
-        );
+          await adapterProvider.sendMessage(formattedNumber, content, {});
+          res.end("Mensaje enviado correctamente.");
 
-        await adapterProvider.sendMessage(
-          `${phoneNumber}@s.whatsapp.net`,
-          content
-        );
+        } else {
+          res.end("Evento no relevante.");
+        }
+      } catch (error: any) {
+        console.error("Error en el webhook de Chatwoot:", error.message);
+        res.end("Error al procesar el webhook.");
       }
-
-      res.status(200).send("Webhook procesado correctamente.");
-    } catch (error: any) {
-      console.error("Error en el webhook de Chatwoot:", error.message);
-      res.status(500).send("Error al procesar el webhook.");
-    }
-  });
-
+    })
+  );
+  
   // Iniciar el servidor HTTP del bot
   httpServer(config.port);
   console.log(

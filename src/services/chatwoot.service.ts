@@ -26,10 +26,15 @@ export class ChatwootService {
 
       // Crear un nuevo inbox si no existe
       const payload = { name, channel: { type: "api", webhook_url: "" } };
-      const { data: createdInbox } = await axios.post(url, payload, { headers: this.headers });
+      const { data: createdInbox } = await axios.post(url, payload, {
+        headers: this.headers,
+      });
       return createdInbox;
     } catch (error: any) {
-      console.error("Error en findOrCreateInbox:", error.response?.data || error.message);
+      console.error(
+        "Error en findOrCreateInbox:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -41,7 +46,10 @@ export class ChatwootService {
       const { data } = await axios.get(url, { headers: this.headers });
       return data.payload.length > 0 ? data.payload[0] : null;
     } catch (error: any) {
-      console.error("Error en findContact:", error.response?.data || error.message);
+      console.error(
+        "Error en findContact:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -52,10 +60,15 @@ export class ChatwootService {
     const payload = { inbox_id: inboxId, name, phone_number: phone };
 
     try {
-      const { data } = await axios.post(url, payload, { headers: this.headers });
+      const { data } = await axios.post(url, payload, {
+        headers: this.headers,
+      });
       return data.payload.contact;
     } catch (error: any) {
-      console.error("Error en createContact:", error.response?.data || error.message);
+      console.error(
+        "Error en createContact:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -71,7 +84,10 @@ export class ChatwootService {
 
       return contact;
     } catch (error: any) {
-      console.error("Error en findOrCreateContact:", error.response?.data || error.message);
+      console.error(
+        "Error en findOrCreateContact:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -91,10 +107,17 @@ export class ChatwootService {
     ];
 
     try {
-      const { data } = await axios.post(url, { payload }, { headers: this.headers });
+      const { data } = await axios.post(
+        url,
+        { payload },
+        { headers: this.headers }
+      );
       return data.payload.length > 0 ? data.payload[0] : null; // Devuelve la conversación encontrada
     } catch (error: any) {
-      console.error("Error en findConversationByPhone:", error.response?.data || error.message);
+      console.error(
+        "Error en findConversationByPhone:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -109,16 +132,25 @@ export class ChatwootService {
     };
 
     try {
-      const { data } = await axios.post(url, payload, { headers: this.headers });
+      const { data } = await axios.post(url, payload, {
+        headers: this.headers,
+      });
       return data;
     } catch (error: any) {
-      console.error("Error en createConversation:", error.response?.data || error.message);
+      console.error(
+        "Error en createConversation:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
 
   // Buscar o crear una conversación
-  async findOrCreateConversation(contactId: number, phone: string, inboxId: number) {
+  async findOrCreateConversation(
+    contactId: number,
+    phone: string,
+    inboxId: number
+  ) {
     try {
       let conversation = await this.findConversationByPhone(phone);
 
@@ -128,7 +160,10 @@ export class ChatwootService {
 
       return conversation;
     } catch (error: any) {
-      console.error("Error en findOrCreateConversation:", error.response?.data || error.message);
+      console.error(
+        "Error en findOrCreateConversation:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
@@ -136,12 +171,19 @@ export class ChatwootService {
   // Crear un mensaje en una conversación existente
   async createMessage(conversationId: number, message: string) {
     const url = this.buildUrl(`/conversations/${conversationId}/messages`);
-    const payload = { content: message, message_type: "incoming", private: false };
+    const payload = {
+      content: message,
+      message_type: "incoming",
+      private: false,
+    };
 
     try {
       await axios.post(url, payload, { headers: this.headers });
     } catch (error: any) {
-      console.error("Error en createMessage:", error.response?.data || error.message);
+      console.error(
+        "Error en createMessage:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   }
