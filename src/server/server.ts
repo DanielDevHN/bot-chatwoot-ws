@@ -23,8 +23,6 @@ export const startServer = async () => {
   adapterProvider.on("message", async (payload) => {
     const { from, pushName, body } = payload;
 
-    console.log(`Mensaje recibido de ${from}: ${body}`);
-
     try {
       const phoneNumber = from.replace("@s.whatsapp.net", "");
       const inbox = await chatwootService.findOrCreateInbox("BOTWS_TS");
@@ -52,7 +50,8 @@ export const startServer = async () => {
 
       await adapterProvider.sendMessage(
         from,
-        "¡Gracias por tu mensaje! Estamos procesando tu solicitud."
+        "¡Gracias por tu mensaje! Estamos procesando tu solicitud.",
+        {}
       );
     } catch (error: any) {
       console.error("Error al procesar el mensaje:", error.message);
@@ -66,32 +65,20 @@ export const startServer = async () => {
       const { event, message_type, content, conversation, private: isPrivate } = req.body;
   
       try {
-        // Validar si el evento es relevante
         if (event === "message_created" && message_type === "outgoing" && !isPrivate) {
           const phoneNumber = conversation?.meta?.sender?.phone_number;
   
           if (!phoneNumber) {
-            console.error("Número de teléfono no encontrado en el webhook.");
             res.end("Error: Número de teléfono no encontrado.");
             return;
           }
-  
-          console.log(`Enviando mensaje desde Chatwoot al usuario: ${phoneNumber}`);
-          console.log(`Contenido del mensaje: ${content}`);
-  
-          // Formatear el número correctamente para Baileys
+
           const formattedNumber = `${phoneNumber.replace("+", "")}@s.whatsapp.net`;
-  
-          // Debug: verificar el formato
-          console.log("Número formateado para Baileys:", formattedNumber);
-  
-          // Enviar mensaje al usuario en WhatsApp
+
           await adapterProvider.sendMessage(formattedNumber, content, {});
-  
-          console.log("Mensaje enviado correctamente.");
-          res.end("Webhook procesado correctamente.");
+          res.end("Mensaje enviado correctamente.");
+
         } else {
-          console.log("Evento no relevante para el webhook.");
           res.end("Evento no relevante.");
         }
       } catch (error: any) {
