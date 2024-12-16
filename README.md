@@ -13,7 +13,7 @@ This project is a WhatsApp chatbot built using the **BuilderBot** library and in
 - [Running the Project](#running-the-project)
 - [How It Works](#how-it-works)
 - [Dependencies](#dependencies)
-- [Testing Hooks](#testing-webhooks)
+- [Testing Webhooks](#testing-webhooks)
 - [Autor](#autor)
 - [Credits](#credits)
 
