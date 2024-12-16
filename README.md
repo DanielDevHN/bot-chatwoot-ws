@@ -111,9 +111,9 @@ The following libraries and tools are used in this project:
 - Go to Settings → Account Settings → Webhooks.
 - Add a webhook pointing to:
 
-```http://<your-server-url>:3002/chatwoot```
+    ```http://<your-server-url>:3002/chatwoot```
 
-- Enable the message_created event.
+- Enable the ```message_created``` event.
 
 2. **Send a message from the Chatwoot dashboard to verify**:
 
