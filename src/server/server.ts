@@ -7,24 +7,23 @@ import {
 } from "@builderbot/bot";
 import { BaileysProvider as Provider } from "@builderbot/provider-baileys";
 import { config } from "~/config";
+import { database } from "~/database";
+import { flow } from "~/flows";
+import { provider } from "~/providers/baileys.provider";
 import { ChatwootService } from "~/services/chatwoot.service";
-import { welcomeFlow } from "~/flows/welcome.flow";
-import { helpFlow } from "~/flows/help.flow";
 
 // Inicializar el servicio de Chatwoot
 const chatwootService = new ChatwootService();
 
 // Configuración principal del bot
 export const startServer = async () => {
-  const adapterDB = new MemoryDB();
-  const adapterFlow = createFlow([welcomeFlow, helpFlow]);
-  const adapterProvider = createProvider(Provider);
+  const adapterProvider = provider;
 
   // Crear el bot e inicializar el servidor HTTP
   const { handleCtx, httpServer } = await createBot({
-    flow: adapterFlow,
-    provider: adapterProvider,
-    database: adapterDB,
+    flow,
+    provider,
+    database,
   });
 
   // Interceptar mensajes entrantes al bot
