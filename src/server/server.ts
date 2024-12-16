@@ -1,11 +1,4 @@
-import {
-  createBot,
-  createFlow,
-  createProvider,
-  MemoryDB,
-  addKeyword,
-} from "@builderbot/bot";
-import { BaileysProvider as Provider } from "@builderbot/provider-baileys";
+import { createBot } from "@builderbot/bot";
 import { config } from "~/config";
 import { database } from "~/database";
 import { flow } from "~/flows";
@@ -67,40 +60,47 @@ export const startServer = async () => {
   });
 
   // Endpoint para manejar los webhooks de Chatwoot
-  adapterProvider.server.post("/chatwoot/webhook", async (req, res) => {
-    const {
-      event,
-      message_type,
-      content,
-      conversation,
-      private: isPrivate,
-    } = req.body;
-
-    try {
-      if (
-        event === "message_created" &&
-        message_type === "outgoing" &&
-        !isPrivate
-      ) {
-        const phoneNumber = conversation.meta.sender.phone_number;
-
-        console.log(
-          `Enviando mensaje desde Chatwoot al usuario: ${phoneNumber}`
-        );
-
-        await adapterProvider.sendMessage(
-          `${phoneNumber}@s.whatsapp.net`,
-          content
-        );
+  adapterProvider.server.post(
+    "/chatwoot",
+    handleCtx(async (_, req, res) => {
+      const { event, message_type, content, conversation, private: isPrivate } = req.body;
+  
+      try {
+        // Validar si el evento es relevante
+        if (event === "message_created" && message_type === "outgoing" && !isPrivate) {
+          const phoneNumber = conversation?.meta?.sender?.phone_number;
+  
+          if (!phoneNumber) {
+            console.error("Número de teléfono no encontrado en el webhook.");
+            res.end("Error: Número de teléfono no encontrado.");
+            return;
+          }
+  
+          console.log(`Enviando mensaje desde Chatwoot al usuario: ${phoneNumber}`);
+          console.log(`Contenido del mensaje: ${content}`);
+  
+          // Formatear el número correctamente para Baileys
+          const formattedNumber = `${phoneNumber.replace("+", "")}@s.whatsapp.net`;
+  
+          // Debug: verificar el formato
+          console.log("Número formateado para Baileys:", formattedNumber);
+  
+          // Enviar mensaje al usuario en WhatsApp
+          await adapterProvider.sendMessage(formattedNumber, content, {});
+  
+          console.log("Mensaje enviado correctamente.");
+          res.end("Webhook procesado correctamente.");
+        } else {
+          console.log("Evento no relevante para el webhook.");
+          res.end("Evento no relevante.");
+        }
+      } catch (error: any) {
+        console.error("Error en el webhook de Chatwoot:", error.message);
+        res.end("Error al procesar el webhook.");
       }
-
-      res.status(200).send("Webhook procesado correctamente.");
-    } catch (error: any) {
-      console.error("Error en el webhook de Chatwoot:", error.message);
-      res.status(500).send("Error al procesar el webhook.");
-    }
-  });
-
+    })
+  );
+  
   // Iniciar el servidor HTTP del bot
   httpServer(config.port);
   console.log(
